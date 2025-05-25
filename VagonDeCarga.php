@@ -1,4 +1,6 @@
 <?php
+include_once 'Vagon.php';
+
 class VagonDeCarga extends Vagon {
     private float $pesoMaximoTransporte;
     private float $pesoCarga;
@@ -31,7 +33,7 @@ class VagonDeCarga extends Vagon {
         $this->indice = $indice;
     }
 
-    public function setPesoCarga(float $pesoCarga): bool {
+    public function incorporarCargaVagon(float $pesoCarga): bool {
         $pudio = false;
         $this->setIndice($pesoCarga);
         $indice = $this->getIndice();

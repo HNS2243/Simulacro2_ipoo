@@ -1,4 +1,6 @@
 <?php
+include_once 'Vagon.php';
+
 class VagonDePasajeros extends Vagon {
     private int $maxPasajeros;
     private int $pasajerosTransportados;
@@ -7,7 +9,7 @@ class VagonDePasajeros extends Vagon {
     public function __construct(DateTime $anioInstalacion, float $largo, float $ancho, float $pesoVacio, int $maxPasajeros){
         parent::__construct($anioInstalacion, $largo, $ancho, $pesoVacio);
         $this->maxPasajeros = $maxPasajeros;
-        $this->pesoPromedioPasajero = 0;
+        $this->pesoPromedioPasajero = 50;
         $this->pasajerosTransportados = 0;
     }
 
@@ -37,10 +39,14 @@ class VagonDePasajeros extends Vagon {
     public function incorporarPasajeroVagon($pasajerosIngresantes): bool {
         $puedeCargar = false;
         $pasajerosMaxTemp = $this->getMaxPasajeros();
-        if ($pasajerosIngresantes <= $pasajerosMaxTemp) {
-            $this->pasajerosTransportados = $pasajerosIngresantes;
-            $pesoTotalPasajeros = $pasajerosIngresantes * $this->pesoPromedioPasajero;
-            $this->setPesoVagon($this->getPesoVacio() + $pesoTotalPasajeros);
+        $pasajerosTransportadosTemp = $this->getPasajerosTransportados();
+        $pasajerosTemp = $pasajerosTransportadosTemp + $pasajerosIngresantes;
+        $pesoPromedioPasajero = $this->getPesoPromedioPasajero();
+        $pesoVacioTemp = $this->getPesoVacio();
+        if ($pasajerosTemp <= $pasajerosMaxTemp) {
+            $this->pasajerosTransportados = $pasajerosTemp;
+            $pesoTotalPasajeros = $pasajerosTemp * $pesoPromedioPasajero;
+            $this->setPesoVagon($pesoVacioTemp + $pesoTotalPasajeros);
             $puedeCargar = true;
         }
         return $puedeCargar;
@@ -54,3 +60,4 @@ class VagonDePasajeros extends Vagon {
                "Peso promedio por pasajero: " . $this->pesoPromedioPasajero . "kg\n";
     }
 }
+?>

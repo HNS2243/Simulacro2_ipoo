@@ -1,4 +1,6 @@
 <?php
+
+
 class Vagon {   //Funcion que sera madre de otras dos funciones. 
     private DateTime $anioInstalacion;
     private float    $largo;
@@ -61,7 +63,6 @@ class Vagon {   //Funcion que sera madre de otras dos funciones.
         $pesoFinal = $pesoExtra + $pesoFinal;
         $this->setPesoVagon($pesoFinal);
         return $pesoFinal;
-        }
-    
+        }    
 }
 ?>

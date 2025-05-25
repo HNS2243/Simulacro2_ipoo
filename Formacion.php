@@ -1,72 +1,134 @@
 <?php
-
-class Formacion extends Vagon {
+class Formacion {
+    private array $vagones; //Tiene que ser unica.
     private Locomotora $locomotora;
-    private array $vagones;
     private int $maxVagones;
 
-    public function __construct(
-        DateTime $anioInstalacion,
-        float $largo,
-        float $ancho,
-        float $pesoVacio,
-        int $tipo, // Puede usarse para describir si es especial
-        Locomotora $locomotora,
-        int $maxVagones
-    ) {
-        parent::__construct($anioInstalacion, $largo, $ancho, $pesoVacio, $tipo, 0, 0);
+    public function __construct(Locomotora $locomotora, array $vagones, int $maxVagones) {
         $this->locomotora = $locomotora;
+        $this->vagones = $vagones;
         $this->maxVagones = $maxVagones;
-        $this->vagones = [];
     }
+    
+    //Funciones GET. 
 
-    // Getters
     public function getLocomotora(): Locomotora {
         return $this->locomotora;
     }
-
     public function getVagones(): array {
         return $this->vagones;
     }
-
     public function getMaxVagones(): int {
         return $this->maxVagones;
     }
+    
+    //Funciones SET que no tienen ninguna validacion, un peligro.
 
-    // Agregar un vagón
-    public function agregarVagon(Vagon $vagon): bool {
-        if (count($this->vagones) < $this->maxVagones) {
-            $this->vagones[] = $vagon;
-            return true;
-        }
-        return false;
+    public function setLocomotora(Locomotora $locomotora){
+        $this->locomotora = $locomotora;
+    }
+    public function setVagones(array $vagones){
+        $this->vagones = $vagones;
+    }
+    public function setMaxVagones(int $maxVagones){
+        $this->maxVagones = $maxVagones;
     }
 
-    // Redefinir calcularPesoVagon: suma de todos los vagones + locomotora + pesoVacio de la formación
-    public function calcularPesoVagon(): float {
-        $pesoTotal = $this->getPesoVacio(); // peso vacío de la formación
-        $pesoTotal += $this->locomotora->calcularPesoVagon(); // peso de la locomotora
+    public function incorporarPasajeroFormacion($pasajerosAIncorporar){
+        $pudio = false;
+        $i = 0;
+        $vagonesTemp = $this->getVagones();
+        $cantVagones = count($vagonesTemp);
+      
+        while ($i < $cantVagones && !$pudio) {
+            $vagon = $vagonesTemp[$i];
+            if (is_a($vagon, 'VagonDePasajeros')) {
+            /** @var VagonDePasajeros $vagon */
+            $pasajerosDisponibles = $vagon->getMaxPasajeros() - $vagon->getPasajerosTransportados();
 
-        foreach ($this->vagones as $vagon) {
-            $pesoTotal += $vagon->calcularPesoVagon();
+            if ($pasajerosAIncorporar <= $pasajerosDisponibles) {
+                // Se intenta incorporar, se usa el método del vagón
+                $pudio = $vagon->incorporarPasajeroVagon($pasajerosAIncorporar);
+            }
         }
-
-        $this->setPesoVagon($pesoTotal); // guarda el total
-        return $pesoTotal;
+        $i++;
+    }
+    return $pudio;
     }
 
-    // Mostrar info
+
+    public function incorporarVagonFormacion(Vagon $vagon){
+        $pudio = false;
+        $maxVagonesTemp = $this->getMaxVagones();
+        $vagonesTemp = $this->getVagones();
+        $cantVagonesActual = count($vagonesTemp);
+         if ( ($cantVagonesActual + 1) >= $maxVagonesTemp) {
+            $vagonesTemp[] = $vagon;
+            $pudio = true;
+        }
+        return $pudio;
+    }
+
+    public function promedioPasajeroFormacion() {
+        $cantVagonesPasajeros = 0;
+        $cantPasajerosTotal = 0;
+        $vagonesTemp = $this->getVagones();
+        foreach ($vagonesTemp as $vagon) {
+            if (is_a($vagon, 'VagonDePasajeros')) {
+            /** @var VagonDePasajeros $vagon */
+            $cantVagonesPasajeros ++;
+            $cantPasajerosVagon = $vagon->getPasajerosTransportados();
+            $cantPasajerosTotal = $cantPasajerosTotal + $cantPasajerosVagon;
+            }
+        $promedioPasajeros = $cantPasajerosTotal / $cantVagonesPasajeros;
+        }
+        return $promedioPasajeros;
+    }
+
+    public function pesoFormacion(){
+        $pesoFinal = 0;
+        $pesoVagones = 0;
+        $pesoLocomotora = ($this->getLocomotora())->getPeso();
+        $vagonesTemp = $this->getVagones();
+        foreach ($vagonesTemp as $vagon) {
+            $pesoVagon = $vagon->getPesoVagon();
+            $pesoVagones= $pesoVagones + $pesoVagon;
+        }
+
+        $pesoFinal = $pesoVagones + $pesoLocomotora; 
+        return $pesoFinal;
+    }
+
+    //Voy a asumir que se trata de los vagones de Carga.
+    public function retornarVagonSinCompletar(){  
+
+        $vagonesTemp = $this->getVagones();
+        $i = 0;
+        $cantVagones = count($vagonesTemp);
+        $vagonEncontrado = null;
+
+         while ($i < $cantVagones && $vagonEncontrado === null) {
+            $vagon = $vagonesTemp[$i];
+                if (is_a($vagon, 'VagonDeCarga')) {
+                     /** @var VagonDeCarga $vagon */
+                     $cargaMaxTemp = $vagon->getPesoMaximoTransporte();
+                     $cargaActual  = $vagon->getPesoCarga();
+                if ($cargaMaxTemp > $cargaActual) {
+                     $vagonEncontrado = $vagon;
+                }        
+            }
+            $i++;
+        }
+        return $vagonEncontrado;
+    }
+
     public function __toString(): string {
-        $info = "FORMACIÓN DE TREN (hereda de Vagon)\n";
-        $info .= "Máximo de vagones: {$this->maxVagones}\n";
-        $info .= "Cantidad actual de vagones: " . count($this->vagones) . "\n";
-        $info .= "--- LOCOMOTORA ---\n" . $this->locomotora . "\n";
+    $info = "Formación:\n";
+    $info .= "- Locomotora: " . $this->locomotora . "\n";
+    $info .= "- Cantidad de vagones: " . count($this->vagones) . "\n";
+    $info .= "- Peso total de la formación: " . $this->pesoFormacion() . " kg\n";
 
-        foreach ($this->vagones as $i => $vagon) {
-            $info .= "--- Vagón #" . ($i + 1) . " ---\n" . $vagon . "\n";
-        }
-
-        $info .= "Peso total de formación: " . $this->calcularPesoVagon() . " kg\n";
-        return $info;
+    return $info;
     }
 }
+?>
